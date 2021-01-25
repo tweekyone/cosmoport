@@ -1,5 +1,7 @@
 package com.space.service;
 
+import com.space.exceptions.ShipBadRequestException;
+import com.space.exceptions.ShipNotFoundException;
 import com.space.model.Ship;
 import com.space.repository.ShipRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -121,17 +123,49 @@ public class ShipServiceImpl implements ShipService{
 
     @Override
     public Ship get(Long id) {
-        return null;
+        return shipRepository.findById(id).orElseThrow(ShipNotFoundException::new);
     }
 
     @Override
-    public Ship update(Ship ship) {
-        return ship;
+    public Ship update(Ship shipById, Ship newShip) {
+        if(newShip.getName() != null && !newShip.getName().equals("")){
+            shipById.setName(newShip.getName());
+        }
+        if(newShip.getPlanet() != null && !newShip.getPlanet().equals("")){
+            shipById.setPlanet(newShip.getPlanet());
+        }
+        if(newShip.getShipType() != null && !newShip.getShipType().equals("")){
+            shipById.setShipType(newShip.getShipType());
+        }
+        if(newShip.getProdDate() != null && isValidDate(newShip.getProdDate().getTime())){
+            shipById.setProdDate(newShip.getProdDate());
+        }
+        if(newShip.isUsed() != null){
+            shipById.setUsed(newShip.isUsed());
+        }
+        if(newShip.getSpeed() != null && isValidSpeed(newShip.getSpeed())){
+            shipById.setSpeed(newShip.getSpeed());
+        }
+        if(newShip.getCrewSize() != null && isValidCrew(newShip.getCrewSize())){
+            shipById.setCrewSize(newShip.getCrewSize());
+        }
+
+        Double rating = ratingCounter(shipById.isUsed(), shipById.getSpeed(), shipById.getProdDate());
+
+        shipById.setRating(rating);
+
+        return shipRepository.saveAndFlush(shipById);
     }
 
     @Override
     public boolean delete(Long id) {
-        return false;
+        if(id > 0 && id <= Long.MAX_VALUE){
+            shipRepository.findById(id).orElseThrow(ShipNotFoundException::new);
+            shipRepository.deleteById(id);
+            return true;
+        }else{
+            throw new ShipBadRequestException();
+        }
     }
 
     private boolean isValidDate(Long date){

@@ -79,4 +79,35 @@ public class Controller {
         }
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+    @GetMapping("/rest/ships/{id}")
+    public ResponseEntity<Ship> getShip(@PathVariable Long id ){
+        if(id > Long.MAX_VALUE || id <= 0){
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        Ship response = shipService.get(id);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PostMapping("/rest/ships/{id}")
+    public ResponseEntity<Ship> updateShip(@PathVariable Long id,
+                                           @RequestBody Ship ship){
+        if(id > Long.MAX_VALUE || id <= 0){
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        Ship shipById = shipService.get(id);
+
+        Ship response = shipService.update(shipById, ship);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+
+    @DeleteMapping("/rest/ships/{id}")
+    public ResponseEntity<Boolean> removeShip(@PathVariable Long id){
+        return new ResponseEntity<>(shipService.delete(id), HttpStatus.OK);
+    }
+
 }
