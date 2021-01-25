@@ -12,6 +12,7 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 
@@ -24,8 +25,8 @@ public class ShipServiceImpl implements ShipService{
     private EntityManager entityManager;
 
     @Override
-    public void create(Ship ship) {
-        shipRepository.save(ship);
+    public Ship create(Ship ship) {
+        return shipRepository.save(ship);
     }
 
     @Override
@@ -45,16 +46,16 @@ public class ShipServiceImpl implements ShipService{
         }
 
         if(ship.getShipType().isPresent()){
-            predicates.add(cb.equal(root.get("shipType"), ship.getShipType().get().name()));
+            predicates.add(cb.equal(root.get("shipType"), ship.getShipType().get()));
         }
 
         if(ship.getAfter().isPresent() && isValidDate(ship.getAfter().get()) && ship.getBefore().isPresent()
             && isValidDate(ship.getBefore().get())){
-            predicates.add(cb.between(root.get("prodDate"), ship.getAfter().get(), ship.getBefore().get()));
+            predicates.add(cb.between(root.get("prodDate"), new Date(ship.getAfter().get()), new Date(ship.getBefore().get())));
         } else if (ship.getAfter().isPresent() && isValidDate(ship.getAfter().get())){
-            predicates.add(cb.greaterThanOrEqualTo(root.get("prodDate"), ship.getAfter().get()));
+            predicates.add(cb.greaterThanOrEqualTo(root.get("prodDate"), new Date(ship.getAfter().get())));
         } else if (ship.getBefore().isPresent() && isValidDate(ship.getBefore().get())){
-            predicates.add(cb.lessThanOrEqualTo(root.get("prodDate"), ship.getBefore().get()));
+            predicates.add(cb.lessThanOrEqualTo(root.get("prodDate"), new Date(ship.getBefore().get())));
         }
 
         if(ship.getIsUsed().isPresent()){
@@ -62,7 +63,7 @@ public class ShipServiceImpl implements ShipService{
         }
 
         if(ship.getMinSpeed().isPresent() && isValidSpeed(ship.getMinSpeed().get()) && ship.getMaxSpeed().isPresent()
-                && isValidSpeed(ship.getMaxRating().get())){
+                && isValidSpeed(ship.getMaxSpeed().get())){
             predicates.add(cb.between(root.get("speed"), ship.getMinSpeed().get(), ship.getMaxSpeed().get()));
         } else if (ship.getMinSpeed().isPresent() && isValidSpeed(ship.getMinSpeed().get())){
             predicates.add(cb.greaterThanOrEqualTo(root.get("speed"), ship.getMinSpeed().get()));
@@ -70,14 +71,37 @@ public class ShipServiceImpl implements ShipService{
             predicates.add(cb.lessThanOrEqualTo(root.get("speed"), ship.getMaxSpeed().get()));
         }
 
+        if(ship.getMinCrewSize().isPresent() && isValidCrew(ship.getMinCrewSize().get()) && ship.getMaxCrewSize().isPresent()
+                && isValidCrew(ship.getMaxCrewSize().get())){
+            predicates.add(cb.between(root.get("crewSize"), ship.getMinCrewSize().get(), ship.getMaxCrewSize().get()));
+        } else if (ship.getMinCrewSize().isPresent() && isValidCrew(ship.getMinCrewSize().get())){
+            predicates.add(cb.greaterThanOrEqualTo(root.get("crewSize"), ship.getMinCrewSize().get()));
+        } else if (ship.getMaxCrewSize().isPresent() && isValidCrew(ship.getMaxCrewSize().get())){
+            predicates.add(cb.lessThanOrEqualTo(root.get("crewSize"), ship.getMaxCrewSize().get()));
+        }
 
+        if(ship.getMinRating().isPresent() && ship.getMinRating().get() != null && ship.getMaxRating().isPresent()
+                && ship.getMaxRating().get() != null){
+            predicates.add(cb.between(root.get("rating"), ship.getMinRating().get(), ship.getMaxRating().get()));
+        } else if (ship.getMinRating().isPresent() && ship.getMinRating().get() != null){
+            predicates.add(cb.greaterThanOrEqualTo(root.get("rating"), ship.getMinRating().get()));
+        } else if (ship.getMaxRating().isPresent() && ship.getMaxRating().get() != null){
+            predicates.add(cb.lessThanOrEqualTo(root.get("rating"), ship.getMaxRating().get()));
+        }
 
         if(ship.getOrder().isPresent() && !ship.getOrder().get().getFieldName().isEmpty()){
             cq.orderBy(cb.asc(root.get(ship.getOrder().get().getFieldName())));
         }
 
         cq.where(predicates.toArray(new Predicate[0]));
-        return entityManager.createQuery(cq).getResultList();
+
+        if(ship.getPageSize().isPresent() && ship.getPageNumber().isPresent() && ship.getPageNumber().get() == 0){
+            return entityManager.createQuery(cq).setFirstResult(ship.getPageNumber().get()).
+                    setMaxResults(ship.getPageSize().get()).getResultList();
+        }else if(ship.getPageSize().isPresent() && ship.getPageNumber().isPresent()){
+            return entityManager.createQuery(cq).setFirstResult(ship.getPageNumber().get() *
+                    ship.getPageSize().get()).setMaxResults(ship.getPageSize().get()).getResultList();
+        }else return entityManager.createQuery(cq).getResultList();
     }
 
     @Override
@@ -96,13 +120,24 @@ public class ShipServiceImpl implements ShipService{
     }
 
     private boolean isValidDate(Long date){
-        return date != null && (new GregorianCalendar(2800, 1, 1).getTimeInMillis() <= date
-                                && new GregorianCalendar(3019, 1, 1).getTimeInMillis() >= date);
+        if(date == null || date > Long.MAX_VALUE){
+            return false;
+        }
+        return new GregorianCalendar(2800, 1, 1).getTimeInMillis() <= date
+                                && new GregorianCalendar(3019, 1, 1).getTimeInMillis() >= date;
     }
 
     private boolean isValidSpeed(Double speed){
+        if(speed == null || speed > Double.MAX_VALUE){
+            return false;
+        }
         double scale = Math.pow(10, 3);
         double actualSpeed = Math.ceil(speed * scale) / scale;
-        return speed != null && (actualSpeed >= 0.01d && actualSpeed <= 0.99d);
+        return actualSpeed >= 0.01d && actualSpeed <= 0.99d;
     }
+
+    private boolean isValidCrew(Integer crew){
+        return crew != null && (crew >= 1 && crew <= 9999);
+    }
+
 }

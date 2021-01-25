@@ -5,7 +5,7 @@ import com.space.model.Ship;
 import java.util.List;
 
 public interface ShipService {
-    void create(Ship ship);
+    Ship create(Ship ship);
 
     List<Ship> readAll(ShipOptional ship);
 

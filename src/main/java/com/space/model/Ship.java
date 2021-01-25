@@ -9,7 +9,7 @@ public class Ship {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long ID;
+    private Long id;
 
     @Column
     private String name;
@@ -18,6 +18,7 @@ public class Ship {
     private String planet;
 
     @Column
+    @Enumerated(EnumType.STRING)
     private ShipType shipType;
 
     @Column
@@ -35,12 +36,12 @@ public class Ship {
     @Column
     private Double rating;
 
-    public Long getID() {
-        return ID;
+    public Long getId() {
+        return id;
     }
 
-    public void setID(Long ID) {
-        this.ID = ID;
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getName() {

@@ -19,11 +19,14 @@ public class ShipOptional {
     private Optional<Double> minRating;
     private Optional<Double> maxRating;
     private Optional<ShipOrder> order;
+    private Optional<Integer> pageNumber;
+    private Optional<Integer> pageSize;
 
     public ShipOptional(Optional<String> name, Optional<String> planet, Optional<ShipType> shipType,
                         Optional<Long> after, Optional<Long> before, Optional<Boolean> isUsed, Optional<Double> minSpeed,
                         Optional<Double> maxSpeed, Optional<Integer> minCrewSize, Optional<Integer> maxCrewSize,
-                        Optional<Double> minRating, Optional<Double> maxRating, Optional<ShipOrder> order) {
+                        Optional<Double> minRating, Optional<Double> maxRating, Optional<ShipOrder> order,
+                        Optional<Integer> pageNumber, Optional<Integer> pageSize) {
         this.name = name;
         this.planet = planet;
         this.shipType = shipType;
@@ -37,6 +40,8 @@ public class ShipOptional {
         this.minRating = minRating;
         this.maxRating = maxRating;
         this.order = order;
+        this.pageNumber = pageNumber;
+        this.pageSize = pageSize;
     }
 
     public Optional<String> getName() {
@@ -89,5 +94,13 @@ public class ShipOptional {
 
     public Optional<ShipOrder> getOrder() {
         return order;
+    }
+
+    public Optional<Integer> getPageNumber() {
+        return pageNumber;
+    }
+
+    public Optional<Integer> getPageSize() {
+        return pageSize;
     }
 }
