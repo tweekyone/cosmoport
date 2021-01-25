@@ -74,7 +74,12 @@ public class Controller {
     }
 
     @PostMapping("/rest/ships")
-    public ResponseEntity<Ship> createShip(){
+    public ResponseEntity<Ship> createShip(@RequestParam Ship ship){
+        Ship response = shipService.create(ship);
 
+        if(response == null){
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

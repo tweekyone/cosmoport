@@ -26,6 +26,13 @@ public class ShipServiceImpl implements ShipService{
 
     @Override
     public Ship create(Ship ship) {
+        if(ship.getName().length() > 50 || ship.getPlanet().length() > 50 || ship.getName().isEmpty()
+                || ship.getPlanet().isEmpty()){
+            return null;
+        }
+        if(!isValidSpeed(ship.getSpeed()) || !isValidCrew(ship.getCrewSize()) || !isValidDate(ship.getProdDate().getTime())){
+            return null;
+        }
         return shipRepository.save(ship);
     }
 
@@ -120,7 +127,7 @@ public class ShipServiceImpl implements ShipService{
     }
 
     private boolean isValidDate(Long date){
-        if(date == null || date > Long.MAX_VALUE){
+        if(date == null || date > Long.MAX_VALUE || date < 0){
             return false;
         }
         return new GregorianCalendar(2800, 1, 1).getTimeInMillis() <= date
