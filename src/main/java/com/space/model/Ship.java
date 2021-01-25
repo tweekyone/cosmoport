@@ -8,7 +8,7 @@ import java.util.Date;
 public class Ship {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column
@@ -25,7 +25,7 @@ public class Ship {
     private Date prodDate;
 
     @Column
-    private boolean isUsed;
+    private Boolean isUsed;
 
     @Column
     private Double speed;
@@ -76,11 +76,11 @@ public class Ship {
         this.prodDate = prodDate;
     }
 
-    public boolean isUsed() {
+    public Boolean isUsed() {
         return isUsed;
     }
 
-    public void setUsed(boolean used) {
+    public void setUsed(Boolean used) {
         isUsed = used;
     }
 

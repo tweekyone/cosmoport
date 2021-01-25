@@ -26,14 +26,22 @@ public class ShipServiceImpl implements ShipService{
 
     @Override
     public Ship create(Ship ship) {
-        if(ship.getName().length() > 50 || ship.getPlanet().length() > 50 || ship.getName().isEmpty()
-                || ship.getPlanet().isEmpty()){
+        if(ship.getName() == null || ship.getPlanet() == null || ship.getName().isEmpty() || ship.getPlanet().isEmpty()){
+            return null;
+        } else if (ship.getName().length() > 50 || ship.getPlanet().length() > 50){
             return null;
         }
         if(!isValidSpeed(ship.getSpeed()) || !isValidCrew(ship.getCrewSize()) || !isValidDate(ship.getProdDate().getTime())){
             return null;
         }
-        return shipRepository.save(ship);
+
+        if(ship.isUsed() == null){
+            ship.setUsed(false);
+        }
+
+        ship.setRating(ratingCounter(ship.isUsed(), ship.getSpeed(), ship.getProdDate()));
+
+        return shipRepository.saveAndFlush(ship);
     }
 
     @Override
@@ -147,4 +155,11 @@ public class ShipServiceImpl implements ShipService{
         return crew != null && (crew >= 1 && crew <= 9999);
     }
 
+    private Double ratingCounter(Boolean isUsed, Double speed, Date prodDate){
+        double k = isUsed ? 0.5d : 1d;
+        double rating = (80*speed*k) / (new GregorianCalendar(3019, 1, 1).getTime().getYear()
+                - prodDate.getYear() + 1);
+        double scale = Math.pow(10, 3);
+        return Math.ceil(rating * scale) / scale;
+    }
 }
