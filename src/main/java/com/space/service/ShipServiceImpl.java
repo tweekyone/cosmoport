@@ -13,6 +13,8 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -127,34 +129,55 @@ public class ShipServiceImpl implements ShipService{
     }
 
     @Override
-    public Ship update(Ship shipById, Ship newShip) {
-        if(newShip.getName() != null && !newShip.getName().equals("")){
-            shipById.setName(newShip.getName());
-        }
-        if(newShip.getPlanet() != null && !newShip.getPlanet().equals("")){
-            shipById.setPlanet(newShip.getPlanet());
-        }
-        if(newShip.getShipType() != null && !newShip.getShipType().equals("")){
-            shipById.setShipType(newShip.getShipType());
-        }
-        if(newShip.getProdDate() != null && isValidDate(newShip.getProdDate().getTime())){
-            shipById.setProdDate(newShip.getProdDate());
-        }
-        if(newShip.isUsed() != null){
-            shipById.setUsed(newShip.isUsed());
-        }
-        if(newShip.getSpeed() != null && isValidSpeed(newShip.getSpeed())){
-            shipById.setSpeed(newShip.getSpeed());
-        }
-        if(newShip.getCrewSize() != null && isValidCrew(newShip.getCrewSize())){
-            shipById.setCrewSize(newShip.getCrewSize());
+    public Ship update(Long id, Ship newShip) {
+
+        if (id <= Long.MAX_VALUE && id > 0) {
+            Ship ship = shipRepository.findById(id).orElseThrow(ShipNotFoundException::new);
+
+            if(newShip.getName() != null){
+                if(newShip.getName().length() <= 50 && !newShip.getName().equals("")){
+                    ship.setName(newShip.getName());
+                }else throw new ShipBadRequestException();
+            }
+
+            if(newShip.getPlanet() != null){
+                if(newShip.getPlanet().length() <= 50 && !newShip.getPlanet().equals("")){
+                    ship.setPlanet(newShip.getPlanet());
+                }else throw new ShipBadRequestException();
+            }
+
+            if(newShip.getSpeed() != null){
+                if(isValidSpeed(newShip.getSpeed())){
+                    ship.setSpeed(newShip.getSpeed());
+                }else throw new ShipBadRequestException();
+            }
+
+            if(newShip.getCrewSize() != null){
+                if(isValidCrew(newShip.getCrewSize())){
+                    ship.setCrewSize(newShip.getCrewSize());
+                }else throw new ShipBadRequestException();
+            }
+
+            if(newShip.isUsed() != null){
+                ship.setUsed(newShip.isUsed());
+            }
+
+            if(newShip.getShipType() != null){
+                ship.setShipType(newShip.getShipType());
+            }
+
+            if(newShip.getProdDate() != null){
+                if(isValidDate(newShip.getProdDate().getTime())){
+                    ship.setProdDate(newShip.getProdDate());
+                }else throw new ShipBadRequestException();
+            }
+
+            ship.setRating(ratingCounter(ship.isUsed(), ship.getSpeed(), ship.getProdDate()));
+            shipRepository.saveAndFlush(ship);
+            return ship;
         }
 
-        Double rating = ratingCounter(shipById.isUsed(), shipById.getSpeed(), shipById.getProdDate());
-
-        shipById.setRating(rating);
-
-        return shipRepository.saveAndFlush(shipById);
+        return null;
     }
 
     @Override
@@ -190,10 +213,8 @@ public class ShipServiceImpl implements ShipService{
     }
 
     private Double ratingCounter(Boolean isUsed, Double speed, Date prodDate){
-        double k = isUsed ? 0.5d : 1d;
-        double rating = (80*speed*k) / (new GregorianCalendar(3019, 1, 1).getTime().getYear()
-                - prodDate.getYear() + 1);
-        double scale = Math.pow(10, 3);
-        return Math.ceil(rating * scale) / scale;
+        double k = isUsed ? 0.5 : 1;
+        double rating = (80 * speed * k) / (new GregorianCalendar(3019, 1, 1).getTime().getYear() - prodDate.getYear() + 1);
+        return new BigDecimal(rating).setScale(2, RoundingMode.HALF_UP).doubleValue();
     }
 }

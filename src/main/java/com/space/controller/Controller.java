@@ -1,5 +1,6 @@
 package com.space.controller;
 
+import com.space.exceptions.ShipBadRequestException;
 import com.space.model.Ship;
 import com.space.model.ShipType;
 import com.space.service.ShipOptional;
@@ -94,13 +95,10 @@ public class Controller {
     @PostMapping("/rest/ships/{id}")
     public ResponseEntity<Ship> updateShip(@PathVariable Long id,
                                            @RequestBody Ship ship){
-        if(id > Long.MAX_VALUE || id <= 0){
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        Ship response = shipService.update(id, ship);
+        if(response == null){
+            throw new ShipBadRequestException();
         }
-
-        Ship shipById = shipService.get(id);
-
-        Ship response = shipService.update(shipById, ship);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

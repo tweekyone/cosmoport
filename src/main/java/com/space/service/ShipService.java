@@ -11,7 +11,7 @@ public interface ShipService {
 
     Ship get(Long id);
 
-    Ship update(Ship shipById, Ship shipOptional);
+    Ship update(Long id, Ship shipOptional);
 
     boolean delete(Long id);
 }
